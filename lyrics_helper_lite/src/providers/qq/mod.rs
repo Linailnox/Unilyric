@@ -195,7 +195,8 @@ impl LyricProvider for QQProvider {
         let decrypted_main_xml = decrypt_qrc(&main_lyrics_encrypted)?;
         let main_lyrics = extract_qrc_content_from_xml(&decrypted_main_xml)?;
 
-        let translation_content = decrypt_qrc(&trans_lyrics_encrypted).ok();
+        let translation_content =
+            decrypt_qrc(&trans_lyrics_encrypted).map_or(Some(trans_lyrics_encrypted), Some);
 
         let romanization_content = decrypt_qrc(&roma_lyrics_encrypted)
             .ok()
