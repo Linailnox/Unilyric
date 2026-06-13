@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::error::{FetcherError, Result};
 use lyrics_helper_core::{
     AnnotatedTrack, LyricFormat, LyricLine, LyricLineBuilder, LyricSyllable, LyricSyllableBuilder,
     LyricTrack, ParsedSourceData, Word,
@@ -31,6 +31,12 @@ pub fn parse_qrc(content: &str) -> Result<ParsedSourceData> {
             Ok(None) => (),
             Err(e) => warnings.push(e.to_string()),
         }
+    }
+
+    if final_lines.is_empty(){
+    return Err(FetcherError::Provider(
+        "Failed to parse any valid lyric lines from the QRC content.".to_string()
+    ));
     }
 
     Ok(ParsedSourceData {

@@ -24,15 +24,11 @@ static QRC_CONTENT_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 pub struct QQProvider;
 
 fn extract_qrc_content_from_xml(xml_text: &str) -> Result<String> {
-    QRC_CONTENT_REGEX
+    Ok(QRC_CONTENT_REGEX
         .captures(xml_text)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().to_string())
-        .ok_or_else(|| {
-            FetcherError::Provider(
-                "Failed to extract LyricContent from decrypted QRC XML".to_string(),
-            )
-        })
+        .unwrap_or_else(|| xml_text.to_string()))
 }
 
 impl LyricProvider for QQProvider {
@@ -195,22 +191,20 @@ impl LyricProvider for QQProvider {
         let decrypted_main_xml = decrypt_qrc(&main_lyrics_encrypted)?;
         let main_lyrics = extract_qrc_content_from_xml(&decrypted_main_xml)?;
 
-        let translation_content =
-            decrypt_qrc(&trans_lyrics_encrypted).map_or(Some(trans_lyrics_encrypted), Some);
+        let translation_content = decrypt_qrc(&trans_lyrics_encrypted).ok();
 
         let romanization_content = decrypt_qrc(&roma_lyrics_encrypted)
             .ok()
             .and_then(|xml| extract_qrc_content_from_xml(&xml).ok());
 
-        let mut main_parsed = parse_qrc(&main_lyrics)?;
-
+        let mut main_parsed = parse_qrc(&main_lyrics).or_else(|_| parse_lrc(&main_lyrics))?;;
         let translation_lines = translation_content
             .map(|t| parse_lrc(&t).map(|p| p.lines))
             .transpose()?;
 
         let romanization_lines = romanization_content
-            .map(|r| parse_qrc(&r).map(|p| p.lines))
-            .transpose()?;
+            .and_then(|r| parse_qrc(&r).ok())
+            .map(|p| p.lines);
 
         let merged_lines =
             merge_lyric_lines(main_parsed.lines, translation_lines, romanization_lines);

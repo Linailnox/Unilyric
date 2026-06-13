@@ -9,8 +9,9 @@ use crate::error::Result;
 ///
 /// 用于解密 API 返回的歌词字符串。
 pub fn decrypt_qrc(encrypted_text: &str) -> Result<String> {
-    let encrypted_bytes = hex::decode(encrypted_text)
-        .map_err(|e| crate::error::FetcherError::Provider(format!("无效的十六进制字符串: {e}")))?;
+    let Ok(encrypted_bytes) = hex::decode(encrypted_text) else {
+        return Ok(encrypted_text.to_string());
+    };
 
     qrc_logic::decrypt_lyrics_from_bytes(&encrypted_bytes)
 }

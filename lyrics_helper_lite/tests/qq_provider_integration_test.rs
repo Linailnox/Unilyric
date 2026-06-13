@@ -3,6 +3,7 @@ use lyrics_helper_lite::providers::{LyricProvider, TrackQuery, qq::QQProvider};
 
 const SEARCH_RESPONSE_JSON: &str = include_str!("test_data/qq_search_response.json");
 const LYRICS_RESPONSE_XML: &str = include_str!("test_data/qq_lyrics_response.xml");
+const LRC_LYRICS_RESPONSE_XML: &str = include_str!("test_data/qq_lrc_lyrics_response.xml");
 
 #[test]
 fn test_prepare_search_request() {
@@ -104,5 +105,26 @@ fn test_handle_lyrics_response() {
     assert!(
         !first_translation_text.is_empty(),
         "First translation text should not be empty"
+    );
+}
+#[test]
+fn test_handle_lrc_lyrics_response() {
+    let provider = QQProvider;
+    let parsed_data = provider
+        .handle_lyrics_response(LRC_LYRICS_RESPONSE_XML)
+        .unwrap();
+
+    assert!(
+        !parsed_data.lines.is_empty(),
+        "Parsed lyric lines should not be empty"
+    );
+    let first_line = &parsed_data.lines[0];
+    assert!(
+        first_line.start_ms > 0,
+        "First line should have a start time"
+    );
+    assert!(
+        first_line.main_text().is_some(),
+        "First line should have main text"
     );
 }
