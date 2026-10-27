@@ -112,6 +112,8 @@ pub enum ProviderName {
     Kugou,
     /// AMLL TTML 数据库
     AmllTtmlDatabase,
+    /// AMLL TTML API
+    AmllTtmlApi,
 }
 
 impl ProviderName {
@@ -123,6 +125,7 @@ impl ProviderName {
             Self::Netease => "netease",
             Self::Kugou => "kugou",
             Self::AmllTtmlDatabase => "amll-ttml-database",
+            Self::AmllTtmlApi => "amll-ttml-api",
         }
     }
 
@@ -134,6 +137,7 @@ impl ProviderName {
             "netease" => Some(Self::Netease),
             "kugou" => Some(Self::Kugou),
             "amll-ttml-database" => Some(Self::AmllTtmlDatabase),
+            "amll-ttml-api" => Some(Self::AmllTtmlApi),
             _ => None,
         }
     }
@@ -146,6 +150,7 @@ impl ProviderName {
             Self::Netease,
             Self::Kugou,
             Self::AmllTtmlDatabase,
+            Self::AmllTtmlApi,
         ]
     }
 
@@ -157,6 +162,7 @@ impl ProviderName {
             Self::Netease => "网易云音乐",
             Self::Kugou => "酷狗音乐",
             Self::AmllTtmlDatabase => "AMLL TTML 数据库",
+            Self::AmllTtmlApi => "AMLL TTML API",
         }
     }
 }
@@ -174,6 +180,7 @@ impl std::str::FromStr for ProviderName {
         Self::try_from_str(s).ok_or_else(|| format!("不支持的提供商: {s}"))
     }
 }
+use crate::providers::amll_ttml_api::AmllTtmlApi;
 use crate::providers::amll_ttml_database::AmllTtmlDatabase;
 
 use crate::providers::{Provider, kugou::KugouMusic, netease::NeteaseClient, qq::QQMusic};
@@ -308,6 +315,9 @@ impl LyricsHelper {
                         .await
                         .map(|p| Box::new(p) as Box<_>),
                     ProviderName::AmllTtmlDatabase => AmllTtmlDatabase::with_http_client(client)
+                        .await
+                        .map(|p| Box::new(p) as Box<_>),
+                    ProviderName::AmllTtmlApi => AmllTtmlApi::with_http_client(client)
                         .await
                         .map(|p| Box::new(p) as Box<_>),
                 };

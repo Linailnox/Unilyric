@@ -7,17 +7,15 @@ use serde::Deserialize;
 
 use crate::{
     config::AmllMirror,
-    converter::{self},
     error::{LyricsHelperError, Result},
     http::HttpClient,
     model::match_type::MatchScorable,
-    providers::{Provider, amll_ttml_database::types::DedupKey},
+    providers::{Provider, amll_ttml_database::types::DedupKey, common},
     search::matcher::compare_track,
 };
 
 use lyrics_helper_core::{
-    ConversionInput, ConversionOptions, CoverSize, FullLyricsResult, InputFile, LyricFormat,
-    MatchType, ParsedSourceData, RawLyrics, SearchResult, Track, model::generic,
+    CoverSize, FullLyricsResult, MatchType, ParsedSourceData, SearchResult, Track, model::generic,
 };
 
 mod types;
@@ -181,37 +179,8 @@ impl Provider for AmllTtmlDatabase {
         }
         let response_text = response.text()?;
 
-        let conversion_input = ConversionInput {
-            main_lyric: InputFile {
-                content: response_text.clone(),
-                format: LyricFormat::Ttml,
-                language: None,
-                filename: Some(song_id.to_string()),
-            },
-            translations: vec![],
-            romanizations: vec![],
-            target_format: LyricFormat::default(),
-            user_metadata_overrides: None,
-            additional_metadata: None,
-        };
-
-        let mut parsed_data =
-            converter::parse_and_merge(&conversion_input, &ConversionOptions::default())
-                .map_err(|e| LyricsHelperError::Parser(e.to_string()))?;
-
-        parsed_data.source_name = "amll-ttml-database".to_string();
-
-        let raw_lyrics = RawLyrics {
-            format: "ttml".to_string(),
-            content: response_text,
-            translation: None,  // 由 TTML 解析器自己处理
-            romanization: None, // 由 TTML 解析器自己处理
-        };
-
-        Ok(FullLyricsResult {
-            parsed: parsed_data,
-            raw: raw_lyrics,
-        })
+        // 解析逻辑已迁出到 providers::common，两个 AMLL provider 共用。
+        common::parse_ttml_to_full_result(response_text, "amll-ttml-database")
     }
 
     /// 获取歌词。`song_id` 就是 TTML 文件名。

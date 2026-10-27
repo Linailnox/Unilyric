@@ -122,12 +122,42 @@ pub enum AmllMirror {
     },
 }
 
+/// AMLL TTML API 的镜像配置。
+///
+/// 与 `AmllMirror` 分开：后者指向静态文件镜像（索引 + raw-lyrics），
+/// 不保证提供 HTTP API；本枚举指向 `/v1/lyrics/*` 接口。
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(tag = "type", rename_all = "kebab-case")]
+pub enum AmllApiMirror {
+    /// 官方 API（https://api.amll.dev）
+    #[default]
+    Official,
+    /// 自建或第三方 API 实例
+    Custom {
+        /// API 根地址，例如 `https://api.example.com`
+        base_url: String,
+    },
+}
+
+impl AmllApiMirror {
+    /// 返回 API 根地址。
+    pub fn base_url(&self) -> &str {
+        match self {
+            Self::Official => "https://api.amll.dev",
+            Self::Custom { base_url } => base_url,
+        }
+    }
+}
+
 /// AMLL TTML Database 的配置项。
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct AmllConfig {
     #[serde(default)]
     /// AMLL 数据库的镜像源配置。
     pub mirror: AmllMirror,
+    #[serde(default)]
+    /// AMLL TTML API 的镜像配置。
+    pub api_mirror: AmllApiMirror,
 }
 
 /// 通用的、带时间戳的缓存配置结构。

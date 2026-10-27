@@ -2,7 +2,9 @@
 //!
 //! 该模块定义了与 Providers 进行交互的核心抽象。
 
+pub mod amll_ttml_api;
 pub mod amll_ttml_database;
+pub(crate) mod common;
 pub mod kugou;
 pub mod netease;
 pub mod qq;
