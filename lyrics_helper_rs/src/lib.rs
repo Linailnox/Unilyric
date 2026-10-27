@@ -292,7 +292,23 @@ impl LyricsHelper {
     /// # 返回
     /// 如果所有提供商都成功或部分成功初始化，则返回 `Ok(())`。
     pub async fn load_providers(&mut self) -> Result<()> {
-        let provider_names = ProviderName::all();
+        self.load_providers_except(&[]).await
+    }
+
+    /// 加载提供商，跳过 `excluded` 中列出的项。
+    ///
+    /// 用于让上层按用户设置禁用某些源（例如基于 GitHub 索引的旧 AMLL 数据库），
+    /// 避免其初始化失败影响日志与启动耗时。
+    pub async fn load_providers_except(&mut self, excluded: &[ProviderName]) -> Result<()> {
+        let provider_names: Vec<ProviderName> = ProviderName::all()
+            .into_iter()
+            .filter(|name| !excluded.contains(name))
+            .collect();
+        tracing::info!(
+            "[LyricsHelper] 将加载 {} 个提供商（跳过 {:?}）",
+            provider_names.len(),
+            excluded
+        );
         let mut clients: HashMap<ProviderName, Arc<dyn HttpClient>> = HashMap::new();
         let mut provider_initializers = Vec::new();
 
